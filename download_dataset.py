@@ -13,8 +13,8 @@ MAIN_IMAGE_FOLDER = Path(r"C:\Users\khans\Desktop\RESEARCH\coco_search18_images_
 
 CATEGORIES_OF_INTEREST = [
     "bottle","bowl","car","chair","clock","cup","fork","keyboard",
-    "knife","laptop","microwave","mouse","oven","potted_plant",
-    "sink","stop_sign","toilet","tv"
+    "knife","laptop","microwave","mouse","oven","potted plant",
+    "sink","stop sign","toilet","tv"
 ]
 VISUALIZE_COUNT = 15
 
