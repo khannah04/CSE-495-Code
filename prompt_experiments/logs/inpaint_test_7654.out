@@ -1,0 +1,15 @@
+loading annotations into memory...
+Done (t=14.73s)
+creating index...
+index created!
+loading annotations into memory...
+Done (t=0.37s)
+creating index...
+index created!
+Loading models (this may take a while)...
+[KDownloading https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo12n.pt to 'yolo12n.pt': 100% ━━━━━━━━━━━━ 5.3MB 98.4MB/s 0.1s[KDownloading https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo12n.pt to 'yolo12n.pt': 100% ━━━━━━━━━━━━ 5.3MB 75.1MB/s 0.1s
+All models loaded.
+Processing category: bottle
+> /home/kshaltiel/code/CSE-495-Code/calculate_metrics.py(276)process_image_pair()
+-> if mask_crop is None:
+(Pdb) 

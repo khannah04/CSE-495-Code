@@ -1,0 +1,90 @@
+Using device: cuda
+Loading CLIP model...
+✓ CLIP model loaded
+Starting CLIP presence scoring for minimal prompt...
+Found 18 categories
+
+✅ Saved full results: /home/kshaltiel/code/CSE-495-Code/output/CLIP_PRESENCE_SCORES/minimal_clip_presence_scores.csv
+   Total rows: 62020
+
+================================================================================
+SUMMARY STATISTICS
+================================================================================
+
+BBOX:
+  Original images:
+    Mean presence prob: 0.6430
+    Mean logit diff: 0.9894
+    Mean text similarity: 0.1627
+  Inpainted images:
+    Mean presence prob: 0.6344
+    Mean logit diff: 0.9145
+    Mean text similarity: 0.1603
+  Delta (original - inpainted):
+    Mean delta presence prob: 0.0086
+    Mean delta logit diff: 0.0749
+    Mean delta text similarity: 0.0024
+
+SEGMENTATION:
+  Original images:
+    Mean presence prob: 0.6430
+    Mean logit diff: 0.9894
+    Mean text similarity: 0.1627
+  Inpainted images:
+    Mean presence prob: 0.6483
+    Mean logit diff: 1.0180
+    Mean text similarity: 0.1622
+  Delta (original - inpainted):
+    Mean delta presence prob: -0.0053
+    Mean delta logit diff: -0.0286
+    Mean delta text similarity: 0.0006
+
+================================================================================
+PER-CATEGORY ANALYSIS (Inpainted Presence Probability)
+================================================================================
+                          inpainted_presence_prob  ... delta_presence_prob
+                                             mean  ...                 std
+category     condition                             ...                    
+bottle       bbox                          0.6102  ...              0.1488
+             segmentation                  0.6345  ...              0.1492
+bowl         bbox                          0.4985  ...              0.1332
+             segmentation                  0.5111  ...              0.1247
+car          bbox                          0.4390  ...              0.1863
+             segmentation                  0.4462  ...              0.1670
+chair        bbox                          0.5962  ...              0.1022
+             segmentation                  0.6086  ...              0.0974
+clock        bbox                          0.7177  ...              0.1864
+             segmentation                  0.7659  ...              0.1506
+cup          bbox                          0.3744  ...              0.1560
+             segmentation                  0.3927  ...              0.1478
+fork         bbox                          0.6728  ...              0.1010
+             segmentation                  0.6792  ...              0.0960
+keyboard     bbox                          0.7699  ...              0.1166
+             segmentation                  0.7834  ...              0.1120
+knife        bbox                          0.3639  ...              0.1577
+             segmentation                  0.3709  ...              0.1468
+laptop       bbox                          0.6002  ...              0.1693
+             segmentation                  0.6315  ...              0.1422
+microwave    bbox                          0.9448  ...              0.0457
+             segmentation                  0.9496  ...              0.0411
+mouse        bbox                          0.5288  ...              0.1754
+             segmentation                  0.5461  ...              0.1586
+oven         bbox                          0.9735  ...              0.0237
+             segmentation                  0.9747  ...              0.0188
+potted plant bbox                          0.3893  ...              0.1083
+             segmentation                  0.3836  ...              0.1007
+sink         bbox                          0.6130  ...              0.0835
+             segmentation                  0.6137  ...              0.0805
+stop sign    bbox                          0.6983  ...              0.1918
+             segmentation                  0.7598  ...              0.1731
+toilet       bbox                          0.9288  ...              0.0428
+             segmentation                  0.9319  ...              0.0327
+tv           bbox                          0.7826  ...              0.1093
+             segmentation                  0.7949  ...              0.1027
+
+[36 rows x 4 columns]
+
+✅ Saved summary: /home/kshaltiel/code/CSE-495-Code/output/CLIP_PRESENCE_SCORES/minimal_clip_presence_summary.csv
+
+🎉 CLIP presence scoring complete for minimal!
+CLIP presence scoring completed!

@@ -1,0 +1,17 @@
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+Fetching 1 files:   0%|          | 0/1 [00:00<?, ?it/s]Fetching 1 files: 100%|██████████| 1/1 [00:00<00:00, 3472.11it/s]
+Fetching 1 files:   0%|          | 0/1 [00:00<?, ?it/s]Fetching 1 files: 100%|██████████| 1/1 [00:00<00:00, 291.11it/s]
+Traceback (most recent call last):
+  File "/home/kshaltiel/code/CSE-495-Code/calculate_metrics.py", line 514, in <module>
+    full_pipeline()
+  File "/home/kshaltiel/code/CSE-495-Code/calculate_metrics.py", line 388, in full_pipeline
+    metrics = process_image_pair(orig_crop, gen_crop, category_name, mask_crop if segmented else orig_crop)
+  File "/home/kshaltiel/code/CSE-495-Code/calculate_metrics.py", line 276, in process_image_pair
+    if mask_crop is None:
+  File "/home/kshaltiel/code/CSE-495-Code/calculate_metrics.py", line 276, in process_image_pair
+    if mask_crop is None:
+  File "/home/kshaltiel/miniconda3/envs/inpaint_env_py39/lib/python3.9/bdb.py", line 88, in trace_dispatch
+    return self.dispatch_line(frame)
+  File "/home/kshaltiel/miniconda3/envs/inpaint_env_py39/lib/python3.9/bdb.py", line 113, in dispatch_line
+    if self.quitting: raise BdbQuit
+bdb.BdbQuit

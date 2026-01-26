@@ -1,0 +1,106 @@
+Using device: cuda
+Loading CLIP model...
+✓ CLIP model loaded
+🎯 Starting CLIP presence scoring for 6 prompts
+
+================================================================================
+Processing prompt: minimal
+================================================================================
+Found 18 categories
+
+✅ Saved: /home/kshaltiel/code/CSE-495-Code/output/CLIP_PRESENCE_SCORES/minimal_clip_presence_scores.csv (62020 rows)
+✅ Saved: /home/kshaltiel/code/CSE-495-Code/output/CLIP_PRESENCE_SCORES/minimal_clip_presence_summary.csv
+
+BBOX:
+  Inpainted presence prob: 0.6344
+  Delta presence prob: 0.0086
+
+SEGMENTATION:
+  Inpainted presence prob: 0.6483
+  Delta presence prob: -0.0053
+
+================================================================================
+Processing prompt: contextual
+================================================================================
+Found 18 categories
+
+✅ Saved: /home/kshaltiel/code/CSE-495-Code/output/CLIP_PRESENCE_SCORES/contextual_clip_presence_scores.csv (62020 rows)
+✅ Saved: /home/kshaltiel/code/CSE-495-Code/output/CLIP_PRESENCE_SCORES/contextual_clip_presence_summary.csv
+
+BBOX:
+  Inpainted presence prob: 0.6349
+  Delta presence prob: 0.0081
+
+SEGMENTATION:
+  Inpainted presence prob: 0.6478
+  Delta presence prob: -0.0048
+
+================================================================================
+Processing prompt: realistic
+================================================================================
+Found 18 categories
+
+✅ Saved: /home/kshaltiel/code/CSE-495-Code/output/CLIP_PRESENCE_SCORES/realistic_clip_presence_scores.csv (62020 rows)
+✅ Saved: /home/kshaltiel/code/CSE-495-Code/output/CLIP_PRESENCE_SCORES/realistic_clip_presence_summary.csv
+
+BBOX:
+  Inpainted presence prob: 0.6379
+  Delta presence prob: 0.0050
+
+SEGMENTATION:
+  Inpainted presence prob: 0.6500
+  Delta presence prob: -0.0070
+
+================================================================================
+Processing prompt: natural_setting
+================================================================================
+Found 18 categories
+
+✅ Saved: /home/kshaltiel/code/CSE-495-Code/output/CLIP_PRESENCE_SCORES/natural_setting_clip_presence_scores.csv (62020 rows)
+✅ Saved: /home/kshaltiel/code/CSE-495-Code/output/CLIP_PRESENCE_SCORES/natural_setting_clip_presence_summary.csv
+
+BBOX:
+  Inpainted presence prob: 0.6362
+  Delta presence prob: 0.0068
+
+SEGMENTATION:
+  Inpainted presence prob: 0.6496
+  Delta presence prob: -0.0066
+
+================================================================================
+Processing prompt: photorealistic
+================================================================================
+Found 18 categories
+
+✅ Saved: /home/kshaltiel/code/CSE-495-Code/output/CLIP_PRESENCE_SCORES/photorealistic_clip_presence_scores.csv (62020 rows)
+✅ Saved: /home/kshaltiel/code/CSE-495-Code/output/CLIP_PRESENCE_SCORES/photorealistic_clip_presence_summary.csv
+
+BBOX:
+  Inpainted presence prob: 0.6350
+  Delta presence prob: 0.0080
+
+SEGMENTATION:
+  Inpainted presence prob: 0.6487
+  Delta presence prob: -0.0057
+
+================================================================================
+Processing prompt: original_quality
+================================================================================
+Found 18 categories
+
+✅ Saved: /home/kshaltiel/code/CSE-495-Code/output/CLIP_PRESENCE_SCORES/original_quality_clip_presence_scores.csv (62020 rows)
+✅ Saved: /home/kshaltiel/code/CSE-495-Code/output/CLIP_PRESENCE_SCORES/original_quality_clip_presence_summary.csv
+
+BBOX:
+  Inpainted presence prob: 0.6342
+  Delta presence prob: 0.0088
+
+SEGMENTATION:
+  Inpainted presence prob: 0.6469
+  Delta presence prob: -0.0039
+
+================================================================================
+🎉 All CLIP presence scoring complete!
+================================================================================
+Results saved to: /home/kshaltiel/code/CSE-495-Code/output/CLIP_PRESENCE_SCORES/
+CLIP presence scoring for all prompts completed!

@@ -1,0 +1,26 @@
+/home/kshaltiel/miniconda3/envs/inpaint_env_py39/lib/python3.9/site-packages/torchvision/models/_utils.py:208: UserWarning: The parameter 'pretrained' is deprecated since 0.13 and may be removed in the future, please use 'weights' instead.
+  warnings.warn(
+/home/kshaltiel/miniconda3/envs/inpaint_env_py39/lib/python3.9/site-packages/torchvision/models/_utils.py:223: UserWarning: Arguments other than a weight enum or `None` for 'weights' are deprecated since 0.13 and may be removed in the future. The current behavior is equivalent to passing `weights=AlexNet_Weights.IMAGENET1K_V1`. You can also use `weights=AlexNet_Weights.DEFAULT` to get the most up-to-date weights.
+  warnings.warn(msg)
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+Fetching 1 files:   0%|          | 0/1 [00:00<?, ?it/s]Fetching 1 files: 100%|██████████| 1/1 [00:00<00:00, 1005.59it/s]
+Fetching 1 files:   0%|          | 0/1 [00:00<?, ?it/s]Fetching 1 files: 100%|██████████| 1/1 [00:00<00:00,  1.17it/s]Fetching 1 files: 100%|██████████| 1/1 [00:00<00:00,  1.17it/s]
+Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
+Downloading: "https://download.pytorch.org/models/fasterrcnn_resnet50_fpn_coco-258fb6c6.pth" to /home/kshaltiel/.cache/torch/hub/checkpoints/fasterrcnn_resnet50_fpn_coco-258fb6c6.pth
+  0%|          | 0.00/160M [00:00<?, ?B/s]  0%|          | 128k/160M [00:00<03:13, 864kB/s]  0%|          | 512k/160M [00:00<01:20, 2.08MB/s]  1%|          | 1.50M/160M [00:00<00:32, 5.16MB/s]  3%|▎         | 4.25M/160M [00:00<00:12, 13.3MB/s]  6%|▌         | 9.50M/160M [00:00<00:05, 27.0MB/s]  9%|▉         | 15.1M/160M [00:00<00:04, 37.0MB/s] 13%|█▎        | 20.4M/160M [00:00<00:03, 42.4MB/s] 16%|█▋        | 26.0M/160M [00:00<00:02, 47.3MB/s] 19%|█▉        | 31.1M/160M [00:00<00:02, 49.2MB/s] 23%|██▎       | 36.5M/160M [00:01<00:02, 51.3MB/s] 26%|██▌       | 41.9M/160M [00:01<00:02, 52.7MB/s] 30%|██▉       | 47.2M/160M [00:01<00:02, 53.6MB/s] 33%|███▎      | 52.6M/160M [00:01<00:02, 54.3MB/s] 36%|███▋      | 58.0M/160M [00:01<00:01, 54.5MB/s] 40%|███▉      | 63.5M/160M [00:01<00:01, 55.4MB/s] 43%|████▎     | 68.9M/160M [00:01<00:01, 54.9MB/s] 47%|████▋     | 74.4M/160M [00:01<00:01, 55.7MB/s] 50%|████▉     | 79.8M/160M [00:01<00:01, 55.3MB/s] 53%|█████▎    | 85.2M/160M [00:02<00:01, 55.9MB/s] 57%|█████▋    | 90.6M/160M [00:02<00:01, 55.3MB/s] 60%|██████    | 96.1M/160M [00:02<00:01, 55.8MB/s] 64%|██████▎   | 102M/160M [00:02<00:01, 55.7MB/s]  67%|██████▋   | 107M/160M [00:02<00:00, 55.7MB/s] 70%|███████   | 112M/160M [00:02<00:00, 55.8MB/s] 74%|███████▎  | 118M/160M [00:02<00:00, 55.5MB/s] 77%|███████▋  | 123M/160M [00:02<00:00, 55.8MB/s] 80%|████████  | 128M/160M [00:02<00:00, 55.6MB/s] 84%|████████▍ | 134M/160M [00:02<00:00, 55.8MB/s] 87%|████████▋ | 139M/160M [00:03<00:00, 55.7MB/s] 91%|█████████ | 145M/160M [00:03<00:00, 55.8MB/s] 94%|█████████▍| 150M/160M [00:03<00:00, 55.6MB/s] 97%|█████████▋| 156M/160M [00:03<00:00, 55.9MB/s]100%|██████████| 160M/160M [00:03<00:00, 49.1MB/s]
+Traceback (most recent call last):
+  File "/home/kshaltiel/code/CSE-495-Code/prompt_experiments/calculate_metrics_minimal.py", line 283, in <module>
+    json.dump(metric_dict, f, indent=2)
+  File "/home/kshaltiel/miniconda3/envs/inpaint_env_py39/lib/python3.9/json/__init__.py", line 179, in dump
+    for chunk in iterable:
+  File "/home/kshaltiel/miniconda3/envs/inpaint_env_py39/lib/python3.9/json/encoder.py", line 431, in _iterencode
+    yield from _iterencode_dict(o, _current_indent_level)
+  File "/home/kshaltiel/miniconda3/envs/inpaint_env_py39/lib/python3.9/json/encoder.py", line 405, in _iterencode_dict
+    yield from chunks
+  File "/home/kshaltiel/miniconda3/envs/inpaint_env_py39/lib/python3.9/json/encoder.py", line 325, in _iterencode_list
+    yield from chunks
+  File "/home/kshaltiel/miniconda3/envs/inpaint_env_py39/lib/python3.9/json/encoder.py", line 438, in _iterencode
+    o = _default(o)
+  File "/home/kshaltiel/miniconda3/envs/inpaint_env_py39/lib/python3.9/json/encoder.py", line 179, in default
+    raise TypeError(f'Object of type {o.__class__.__name__} '
+TypeError: Object of type float32 is not JSON serializable
