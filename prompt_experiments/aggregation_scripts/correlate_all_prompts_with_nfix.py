@@ -130,6 +130,58 @@ def plot_scatter(pairs, metric_name, condition, prompt_name, out_dir, pearson_r)
     print(f"      [OK] Saved scatter plot to {plot_path}")
 
 
+def plot_correlation_bargraph(agg_row, condition, prompt_name, out_dir):
+    """Generate and save a bar graph of correlation coefficients for key metrics."""
+    print(f"      DEBUG: Creating correlation bar graph for {condition}")
+    
+    # Select key metrics for bar graph
+    key_metrics = ['low_L2', 'mid_L2', 'high_L2', 'rcnn_confidence', 'mid_cosine', 'clip_cosine']
+    
+    # Filter to only include metrics that have valid correlations
+    metrics_to_plot = []
+    correlations = []
+    for metric in key_metrics:
+        if metric in agg_row:
+            val = agg_row[metric]
+            if not (isinstance(val, float) and np.isnan(val)):
+                metrics_to_plot.append(metric)
+                correlations.append(val)
+    
+    if len(metrics_to_plot) == 0:
+        print(f"      ⚠️ No valid correlations to plot")
+        return
+    
+    fig, ax = plt.subplots(figsize=(12, 6))
+    colors = ['red' if c < 0 else 'green' for c in correlations]
+    bars = ax.bar(range(len(metrics_to_plot)), correlations, color=colors, alpha=0.7)
+    
+    ax.set_xticks(range(len(metrics_to_plot)))
+    ax.set_xticklabels([m.replace('_', ' ').title() for m in metrics_to_plot], rotation=45, ha='right')
+    ax.set_ylabel('Pearson Correlation Coefficient', fontsize=12)
+    ax.set_title(f'Correlation with nfix ({condition}) - {prompt_name}', fontsize=14)
+    ax.axhline(y=0, color='black', linestyle='-', linewidth=0.8)
+    ax.grid(True, alpha=0.3, axis='y')
+    
+    # Add value labels on bars
+    for bar, val in zip(bars, correlations):
+        height = bar.get_height()
+        ax.text(bar.get_x() + bar.get_width()/2., height,
+                f'{val:.3f}',
+                ha='center', va='bottom' if height > 0 else 'top',
+                fontsize=10)
+    
+    plot_dir = Path(out_dir) / "nfix_correlation_plots" / prompt_name
+    plot_dir.mkdir(parents=True, exist_ok=True)
+    plot_filename = f"{prompt_name}_{condition}_correlation_bargraph.png"
+    plot_path = plot_dir / plot_filename
+    
+    plt.tight_layout()
+    plt.savefig(plot_path, dpi=150, bbox_inches='tight')
+    plt.close(fig)
+    
+    print(f"      [OK] Saved correlation bar graph to {plot_path}")
+
+
 def correlate_prompt_with_nfix(prompt_name, nfix_map, output_dir):
     """
     Correlate metrics with nfix for a single prompt.
@@ -272,8 +324,9 @@ def correlate_prompt_with_nfix(prompt_name, nfix_map, output_dir):
             
             agg_series = pd.Series(agg_row, name="aggregated correlation")
             
-            # Generate scatter plots for mid_cosine and clip_cosine
-            for metric_to_plot in ['mid_cosine', 'clip_cosine']:
+            # Generate scatter plots for key metrics: L2 distances, rcnn_confidence, and cosine similarities
+            metrics_to_plot = ['low_L2', 'mid_L2', 'high_L2', 'rcnn_confidence', 'mid_cosine', 'clip_cosine']
+            for metric_to_plot in metrics_to_plot:
                 if metric_to_plot in pooled_pairs and len(pooled_pairs[metric_to_plot]) >= 2:
                     plot_scatter(
                         pooled_pairs[metric_to_plot],
@@ -283,6 +336,9 @@ def correlate_prompt_with_nfix(prompt_name, nfix_map, output_dir):
                         output_dir,
                         agg_row.get(metric_to_plot, np.nan)
                     )
+            
+            # Generate bar graph of correlation coefficients
+            plot_correlation_bargraph(agg_row, condition, prompt_name, output_dir)
             
             # Append avg and aggregated rows
             avg_df = pd.DataFrame([avg_row.values], index=["avg"], columns=avg_row.index)
@@ -309,7 +365,7 @@ def main():
     nfix_map = build_nfix_map(fixfile)
     
     # Process each prompt
-    prompts = ['minimal', 'contextual', 'realistic', 'natural_setting', 'photorealistic', 'original_quality',
+    prompts = ['minimal', 'contextual', 'realistic', 'natural_setting', 'photorealistic', 'original_quality', 'descriptive',
                'plausible', 'plausible_scene', 'plausible_realistic', 'plausible_setting', 'plausible_placement', 'highly_plausible']
     
     for prompt in prompts:

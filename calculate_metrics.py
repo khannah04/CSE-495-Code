@@ -37,12 +37,33 @@ from metrics_helpers import *
 warnings.filterwarnings("ignore")
 
 # ---------------- CONFIG ----------------
-OUTPUT_ROOT = Path("/home/kshaltiel/code/CSE-495-Code/output")
+OUTPUT_ROOT = Path("/home/kshaltiel/code/CSE-495-Code/output/PROMPT_EXPERIMENTS/realistic")
 DATASET_ROOT = Path("/home/kshaltiel/code/CSE-495-Code/COCO_IMAGES")
-PER_IMAGE_JSON_ROOT = Path("/home/kshaltiel/code/CSE-495-Code/per_image_metrics") #full pipeline uses this, but we don't need to run this if we are just finding corrs
+PER_IMAGE_JSON_ROOT = Path("/home/kshaltiel/code/CSE-495-Code/output/PROMPT_EXPERIMENTS_PER_IMAGE_METRICS/realistic") #full pipeline uses this, but we don't need to run this if we are just finding corrs
 # AGG_OUTPUT_ROOT = Path("/home/kshaltiel/code/CSE-495-Code/aggregated_metrics_NORMALIZED")
 
 PER_IMAGE_JSON_ROOT.mkdir(parents=True, exist_ok=True)
+
+# Prompt template mapping: folder name -> prompt template
+PROMPT_TEMPLATES = {
+    "minimal": lambda cat: cat,
+    "contextual": lambda cat: f"a {cat}",
+    "realistic": lambda cat: f"a realistic {cat}",
+    "natural_setting": lambda cat: f"a {cat} in a natural setting",
+    "photorealistic": lambda cat: f"a {cat}, photorealistic",
+    "original_quality": lambda cat: f"Full HD, 4K, high quality, high resolution, photorealistic image of {cat}",
+    "plausible": lambda cat: f"a plausible {cat}",
+    "plausible_scene": lambda cat: f"a {cat} in a plausible scene",
+    "plausible_realistic": lambda cat: f"a plausible and realistic {cat}",
+    "plausible_setting": lambda cat: f"a {cat} in a plausible setting",
+    "plausible_placement": lambda cat: f"a {cat} plausibly placed",
+    "highly_plausible": lambda cat: f"a highly plausible {cat}",
+}
+
+# Determine prompt name from OUTPUT_ROOT
+PROMPT_NAME = OUTPUT_ROOT.name
+PROMPT_TEMPLATE = PROMPT_TEMPLATES.get(PROMPT_NAME, lambda cat: cat)
+print(f"Using prompt template for: {PROMPT_NAME}")
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 batch_size = 8
@@ -161,6 +182,64 @@ def get_clip_embedding(img: Image.Image):
     return emb.squeeze(0).cpu()
 
 
+@torch.no_grad()
+def clip_object_presence_score(img: Image.Image, category_name: str):
+    """
+    Calculate object presence score using CLIP zero-shot classification.
+    Returns:
+        - presence_prob: probability that object is present
+        - presence_logit_diff: logit difference (with - without)
+    """
+    text_prompts = [
+        f"a photo containing a {category_name}",
+        f"a photo without a {category_name}"
+    ]
+    
+    inputs = clip_processor(
+        text=text_prompts,
+        images=img,
+        return_tensors="pt",
+        padding=True
+    ).to(device)
+    
+    outputs = clip(**inputs)
+    logits_per_image = outputs.logits_per_image
+    probs = logits_per_image.softmax(dim=1)
+    
+    presence_prob = probs[0, 0].item()
+    logit_diff = logits_per_image[0, 0].item() - logits_per_image[0, 1].item()
+    
+    return presence_prob, logit_diff
+
+
+@torch.no_grad()
+def clip_text_similarity(img: Image.Image, category_name: str):
+    """
+    Compare image similarity to text "{category}" directly.
+    Returns cosine similarity score.
+    """
+    text_prompt = f"a {category_name}"
+    
+    inputs = clip_processor(
+        text=[text_prompt],
+        images=img,
+        return_tensors="pt",
+        padding=True
+    ).to(device)
+    
+    image_features = clip.get_image_features(pixel_values=inputs['pixel_values'])
+    text_features = clip.get_text_features(input_ids=inputs['input_ids'])
+    
+    # Compute cosine similarity: (A·B) / (||A|| * ||B||)
+    dot_product = (image_features @ text_features.T)
+    image_norm = image_features.norm(dim=-1, keepdim=True)
+    text_norm = text_features.norm(dim=-1, keepdim=True)
+    
+    similarity = (dot_product / (image_norm * text_norm.T)).item()
+    
+    return similarity
+
+
 # DINOv3
 DINO_MODEL_NAME = "facebook/dinov3-vitb16-pretrain-lvd1689m"
 dino_processor = AutoImageProcessor.from_pretrained(DINO_MODEL_NAME)
@@ -270,8 +349,6 @@ def process_image_pair(orig_crop: Image.Image, gen_img: Image.Image, category: s
     metrics["high_cosine"] = float(F.cosine_similarity(final_o.flatten().unsqueeze(0),
                                                         final_g.flatten().unsqueeze(0)).item())
 
-    import pdb; pdb.set_trace()
-
     # --- Compute area fraction for mask scaling ---
     if mask_crop is None:
         mask_crop = Image.new("L", orig_crop.size, 255)  # full bbox
@@ -303,6 +380,14 @@ def process_image_pair(orig_crop: Image.Image, gen_img: Image.Image, category: s
     # --- Mask R-CNN and YOLO confidence ---
     metrics["rcnn_confidence"] = get_rcnn_confidence_patch(gen_img, category)
     metrics["yolo_confidence"] = get_yolo_confidence_patch(gen_img, category)
+
+    # --- CLIP object presence scores ---
+    gen_presence_prob, gen_logit_diff = clip_object_presence_score(gen_r, category)
+    metrics["clip_presence_prob"] = gen_presence_prob
+    metrics["clip_presence_logit_diff"] = gen_logit_diff
+    
+    gen_text_sim = clip_text_similarity(gen_r, category)
+    metrics["clip_text_similarity"] = gen_text_sim
 
     return metrics
 
@@ -437,25 +522,27 @@ def generate_category_and_image_sets(source_per_img_dir: Path = Path("./per_img"
 
     # output dirs
     out_perimg = Path("./per_image_metrics")
-    out_perimg_norm = Path("./per_image_metrics_NORMALIZED")
-    out_agg = Path("./aggregated_metrics")
-    out_agg_norm = Path("./aggregated_metrics_NORMALIZED")
-    for p in [out_perimg, out_perimg_norm, out_agg, out_agg_norm]:
-        p.mkdir(parents=True, exist_ok=True)
-
-    all_jsons = list(src.glob("*.json"))
-
-    # metrics to include (9)
+    out_perimg_norm = Pa
     metrics_9 = [
         "pixel_L2",
+        "low_L2",
+        "mid_L2",
+        "high_L2",
         "pixel_cosine",
         "low_cosine",
         "mid_cosine",
         "high_cosine",
         "clip_cosine",
         "dino_cosine",
+        "clip_L2",
+        "dino_L2",
         "rcnn_confidence",
         "yolo_confidence",
+        "clip_presence_prob",
+        "clip_presence_logit_diff",
+        "clip_text_similarity"
+    
+
     ]
 
     def build_bucket(json_files, normalize=False):

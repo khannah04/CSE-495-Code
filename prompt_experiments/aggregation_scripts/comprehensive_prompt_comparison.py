@@ -18,20 +18,22 @@ import json
 import pandas as pd
 import numpy as np
 from pathlib import Path
+from scipy.cluster import hierarchy
+from scipy.spatial.distance import squareform
 from scipy import stats
 import matplotlib.pyplot as plt
 import seaborn as sns
 
 # Paths
 METRICS_ROOT = Path("/home/kshaltiel/code/CSE-495-Code/output/PROMPT_EXPERIMENTS_PER_IMAGE_METRICS")
-NFIX_JSON = Path("/home/kshaltiel/code/CSE-495-Code/cluster_test_embed/coco_search18_fixations_TP_train_split1.json")
+NFIX_JSON = Path("/home/kshaltiel/cluster_test_embed/coco_search18_fixations_TP_train_split1.json")
 OUTPUT_ROOT = Path("/home/kshaltiel/code/CSE-495-Code/output/PROMPT_EXPERIMENTS_ANALYSIS")
 OUTPUT_ROOT.mkdir(parents=True, exist_ok=True)
 
 # All prompts to analyze
 PROMPTS = [
     "minimal", "contextual", "realistic", "natural_setting", 
-    "photorealistic", "original_quality", "plausible", "plausible_scene",
+    "photorealistic", "original_quality", "descriptive", "plausible", "plausible_scene",
     "plausible_realistic", "plausible_setting", "plausible_placement", 
     "highly_plausible"
 ]
@@ -330,12 +332,16 @@ def compute_correlation_table(df, mask_type, categories):
             else:
                 x = np.array([p[0] for p in pairs])
                 y = np.array([p[1] for p in pairs])
-                try:
-                    r_val, _ = stats.pearsonr(x, y)
-                    table.at[cat, mname] = float(r_val)
-                    pooled_pairs[mname].extend(pairs)
-                except:
+                # Check if either array is constant (no variation)
+                if np.std(x) == 0 or np.std(y) == 0:
                     table.at[cat, mname] = np.nan
+                else:
+                    try:
+                        r_val, _ = stats.pearsonr(x, y)
+                        table.at[cat, mname] = float(r_val)
+                        pooled_pairs[mname].extend(pairs)
+                    except:
+                        table.at[cat, mname] = np.nan
     
     # Compute avg row (mean of category r's)
     avg_row = table.mean(axis=0, skipna=True)
@@ -349,11 +355,15 @@ def compute_correlation_table(df, mask_type, categories):
         else:
             x = np.array([p[0] for p in pairs])
             y = np.array([p[1] for p in pairs])
-            try:
-                r_val, _ = stats.pearsonr(x, y)
-                agg_row[mname] = float(r_val)
-            except:
+            # Check if either array is constant (no variation)
+            if np.std(x) == 0 or np.std(y) == 0:
                 agg_row[mname] = np.nan
+            else:
+                try:
+                    r_val, _ = stats.pearsonr(x, y)
+                    agg_row[mname] = float(r_val)
+                except:
+                    agg_row[mname] = np.nan
     
     agg_series = pd.Series(agg_row, name="aggregated correlation")
     
@@ -491,18 +501,33 @@ def compute_inter_prompt_correlation(all_correlations):
         Returns None if insufficient data
     """
     # Build DataFrame: rows=metrics, columns=prompts, values=aggregated_r
+    # OPTION 1: Use only aggregated row (current - fast but less complete)
+    # data = {}
+    # for prompt, corr_data in all_correlations.items():
+    #     if corr_data is None:
+    #         continue
+    #     agg_row = corr_data.iloc[-1]
+    #     data[prompt] = agg_row
+    
+    # OPTION 2: Use ALL values (all categories + avg + aggregated)
     data = {}
     for prompt, corr_data in all_correlations.items():
         if corr_data is None:
             continue
-        # Get aggregated correlation row (last row)
-        agg_row = corr_data.iloc[-1]
-        data[prompt] = agg_row
+        # Flatten entire correlation table into a single vector
+        # This includes all 18 categories + avg + aggregated for all metrics
+        all_values = corr_data.values.flatten()
+        # Create index like "category_metric" for each value
+        indices = [f"{row}_{col}" for row in corr_data.index for col in corr_data.columns]
+        data[prompt] = pd.Series(all_values, index=indices)
     
     if not data:
         return None
     
     df = pd.DataFrame(data)
+    
+    # Remove rows where any prompt has NaN (can't correlate)
+    df = df.dropna()
     
     # Compute correlation between prompt columns
     corr_matrix = df.corr(method="pearson")
@@ -559,12 +584,17 @@ def compute_category_correlations(df, prompt_name):
             if metric not in cat_df.columns:
                 continue
             
-            # Skip if metric has no variation
-            if cat_df[metric].std() == 0 or cat_df['nfix'].std() == 0:
+            # Skip if metric has no variation (check for near-zero std)
+            metric_std = cat_df[metric].std()
+            nfix_std = cat_df['nfix'].std()
+            if np.isclose(metric_std, 0, atol=1e-10) or np.isclose(nfix_std, 0, atol=1e-10):
                 continue
             
             # Compute Pearson correlation
-            r, p = stats.pearsonr(cat_df[metric], cat_df['nfix'])
+            try:
+                r, p = stats.pearsonr(cat_df[metric], cat_df['nfix'])
+            except:
+                continue
             
             results.append({
                 'prompt': prompt_name,
@@ -601,6 +631,18 @@ def compute_category_correlations(df, prompt_name):
 #   - Mean absolute correlation across all prompts
 #   - High bars = robust metrics that consistently predict nfix
 #   - Use to identify which metrics are most valuable
+#
+# Plot 4: Hierarchical Clustering Dendrogram
+#   - Shows which prompts cluster together based on similarity
+#   - Height = dissimilarity (lower = more similar)
+#
+# Plot 5: Prompt Similarity Heatmap
+#   - Enhanced version of inter-prompt correlation with better colormap
+#   - Shows dissimilarity (1 - correlation) for easier interpretation
+#
+# Plot 6: Metric Distribution Comparison
+#   - Violin plots comparing key metrics across all prompts
+#   - Shows which prompts have different distributions
 # ==============================================================================
 def create_visualizations(summary_bbox_df, summary_seg_df, inter_prompt_corr, all_correlations):
     """Generate comparison plots for publication/presentation.
@@ -710,6 +752,45 @@ def create_visualizations(summary_bbox_df, summary_seg_df, inter_prompt_corr, al
             plt.savefig(OUTPUT_ROOT / "03_metric_correlation_strength.png", dpi=300, bbox_inches="tight")
             print(f"  ✓ Saved: 03_metric_correlation_strength.png")
             plt.close()
+    
+    # 4. Hierarchical Clustering Dendrogram
+    if inter_prompt_corr is not None and len(inter_prompt_corr) > 2:
+        # Convert correlation to distance
+        dist_matrix = 1 - inter_prompt_corr.values
+        np.fill_diagonal(dist_matrix, 0)
+        condensed_dist = squareform(dist_matrix)
+        linkage_matrix = hierarchy.linkage(condensed_dist, method='average')
+        
+        fig, ax = plt.subplots(figsize=(12, 6))
+        hierarchy.dendrogram(linkage_matrix, labels=inter_prompt_corr.index.tolist(), ax=ax,
+                            color_threshold=0.005, above_threshold_color='gray')
+        ax.set_xlabel('Prompt', fontsize=12, fontweight='bold')
+        ax.set_ylabel('Distance (1 - correlation)', fontsize=12, fontweight='bold')
+        ax.set_title('Hierarchical Clustering of Prompts\n(Similar prompts cluster together)', 
+                    fontsize=14, fontweight='bold', pad=20)
+        plt.xticks(rotation=45, ha='right')
+        plt.tight_layout()
+        plt.savefig(OUTPUT_ROOT / "04_prompt_clustering_dendrogram.png", dpi=300, bbox_inches='tight')
+        print(f"  ✓ Saved: 04_prompt_clustering_dendrogram.png")
+        plt.close()
+    
+    # 5. Enhanced Prompt Similarity Heatmap
+    if inter_prompt_corr is not None:
+        dissimilarity = 1 - inter_prompt_corr.values
+        np.fill_diagonal(dissimilarity, 0)
+        
+        fig, ax = plt.subplots(figsize=(12, 10))
+        sns.heatmap(dissimilarity * 100, annot=True, fmt='.2f', cmap='YlOrRd',
+                    xticklabels=inter_prompt_corr.columns, yticklabels=inter_prompt_corr.index,
+                    cbar_kws={'label': 'Dissimilarity (%)'}, vmin=0, vmax=1, ax=ax, square=True)
+        ax.set_title('Prompt Dissimilarity Matrix\n(0% = identical patterns, higher = more different)', 
+                    fontsize=14, fontweight='bold', pad=20)
+        plt.xticks(rotation=45, ha='right')
+        plt.yticks(rotation=0)
+        plt.tight_layout()
+        plt.savefig(OUTPUT_ROOT / "05_prompt_dissimilarity_heatmap.png", dpi=300, bbox_inches='tight')
+        print(f"  ✓ Saved: 05_prompt_dissimilarity_heatmap.png")
+        plt.close()
 
 
 # ==============================================================================

@@ -1,25 +1,0 @@
-/home/kshaltiel/miniconda3/envs/inpaint_env_py39/lib/python3.9/site-packages/torchvision/models/_utils.py:208: UserWarning: The parameter 'pretrained' is deprecated since 0.13 and may be removed in the future, please use 'weights' instead.
-  warnings.warn(
-/home/kshaltiel/miniconda3/envs/inpaint_env_py39/lib/python3.9/site-packages/torchvision/models/_utils.py:223: UserWarning: Arguments other than a weight enum or `None` for 'weights' are deprecated since 0.13 and may be removed in the future. The current behavior is equivalent to passing `weights=AlexNet_Weights.IMAGENET1K_V1`. You can also use `weights=AlexNet_Weights.DEFAULT` to get the most up-to-date weights.
-  warnings.warn(msg)
-Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
-Fetching 1 files:   0%|          | 0/1 [00:00<?, ?it/s]Fetching 1 files: 100%|██████████| 1/1 [00:00<00:00, 980.44it/s]
-Traceback (most recent call last):
-  File "/home/kshaltiel/miniconda3/envs/inpaint_env_py39/lib/python3.9/site-packages/transformers/image_processing_base.py", line 347, in get_image_processor_dict
-    resolved_image_processor_file = resolved_image_processor_files[0]
-TypeError: 'NoneType' object is not subscriptable
-
-During handling of the above exception, another exception occurred:
-
-Traceback (most recent call last):
-  File "/home/kshaltiel/code/CSE-495-Code/prompt_experiments/calculate_metrics_photorealistic_only.py", line 44, in <module>
-    clip_processor = CLIPProcessor.from_pretrained("openai/clip-vit-large-patch14")
-  File "/home/kshaltiel/miniconda3/envs/inpaint_env_py39/lib/python3.9/site-packages/transformers/processing_utils.py", line 1331, in from_pretrained
-    args = cls._get_arguments_from_pretrained(pretrained_model_name_or_path, **kwargs)
-  File "/home/kshaltiel/miniconda3/envs/inpaint_env_py39/lib/python3.9/site-packages/transformers/processing_utils.py", line 1390, in _get_arguments_from_pretrained
-    args.append(attribute_class.from_pretrained(pretrained_model_name_or_path, **kwargs))
-  File "/home/kshaltiel/miniconda3/envs/inpaint_env_py39/lib/python3.9/site-packages/transformers/image_processing_base.py", line 201, in from_pretrained
-    image_processor_dict, kwargs = cls.get_image_processor_dict(pretrained_model_name_or_path, **kwargs)
-  File "/home/kshaltiel/miniconda3/envs/inpaint_env_py39/lib/python3.9/site-packages/transformers/image_processing_base.py", line 354, in get_image_processor_dict
-    raise OSError(
-OSError: Can't load image processor for 'openai/clip-vit-large-patch14'. If you were trying to load it from 'https://huggingface.co/models', make sure you don't have a local directory with the same name. Otherwise, make sure 'openai/clip-vit-large-patch14' is the correct path to a directory containing a preprocessor_config.json file

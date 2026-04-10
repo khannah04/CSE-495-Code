@@ -19,7 +19,7 @@ except Exception:
     HAS_COCO = False
 
 # Add parent directory to path to import helpers
-sys.path.insert(0, str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from helpers import *
 
 # --- Paths ---
@@ -42,7 +42,12 @@ pipe = StableDiffusionInpaintPipeline.from_pretrained(
 
 # --- Define prompt strategy: contextual ---
 PROMPT_STRATEGIES = {
-    "contextual": lambda cat: f"a {cat}",
+    "descriptive": lambda cat: (
+        f"{cat}. A single {cat} with a clear, well-defined shape and visible surface details, "
+        f"integrated naturally into the surrounding scene. Soft, "
+        f"ambient lighting consistent with the existing image reveals material properties, "
+        f"edges, and volume, with colors and textures that blend seamlessly with nearby regions."
+    ),
 }
 
 # --- Iterate over prompt strategies ---
@@ -128,7 +133,7 @@ for prompt_name, prompt_fn in PROMPT_STRATEGIES.items():
             if seg_mask_resized:
                 seg_mask_512 = seg_mask_resized.resize(TARGET_SIZE, resample=Image.NEAREST)
                 seg_mask_512 = seg_mask_512.point(lambda p: 255 if p > 128 else 0).convert("L")
-                seg_blurred_512, _ = blur_mask(original_512, seg_mask_512)
+                # seg_blurred_512, _ = blur_mask(original_512, seg_mask_512)
             else:
                 seg_mask_512 = None
                 seg_blurred_512 = None
@@ -174,24 +179,24 @@ for prompt_name, prompt_fn in PROMPT_STRATEGIES.items():
                     # Save inpainted result inside condition folder
                     result.save(condition_dir / f"{base}_rep{i}.jpg")
 
-                    # --- Save collage showing the actual condition ---
-                    if condition_name.startswith("bbox"):
-                        condition_preview = bbox_blurred_512 if "blur" in condition_name else original_512
-                        mask_preview = bbox_mask_512
-                    elif condition_name.startswith("segmentation"):
-                        condition_preview = seg_blurred_512 if "blur" in condition_name else original_512
-                        mask_preview = seg_mask_512
-                    else:
-                        condition_preview = original_512
-                        mask_preview = mask_input
+                    # # --- Save collage showing the actual condition ---
+                    # if condition_name.startswith("bbox"):
+                    #     condition_preview = bbox_blurred_512 if "blur" in condition_name else original_512
+                    #     mask_preview = bbox_mask_512
+                    # elif condition_name.startswith("segmentation"):
+                    #     condition_preview = seg_blurred_512 if "blur" in condition_name else original_512
+                    #     mask_preview = seg_mask_512
+                    # else:
+                    #     condition_preview = original_512
+                    #     mask_preview = mask_input
 
-                    collage = make_collage(
-                        original_512,
-                        condition_preview,
-                        mask_preview,
-                        result
-                    )
-                    collage.save(condition_dir / f"{base}_rep{i}_collage.jpg")
+                    # collage = make_collage(
+                    #     original_512,
+                    #     condition_preview,
+                    #     mask_preview,
+                    #     result
+                    # )
+                    # collage.save(condition_dir / f"{base}_rep{i}_collage.jpg")
 
             # --- Save original image once per image ---
             original_512.save(out_dir / f"{base}_original.jpg")
