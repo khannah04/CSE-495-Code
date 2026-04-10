@@ -1,33 +1,0 @@
-Using a slow image processor as `use_fast` is unset and a slow processor was saved with this model. `use_fast=True` will be the default behavior in v4.52, even if the model was saved with a slow processor. This will result in minor differences in outputs. You'll still be able to use a slow processor with `use_fast=False`.
-Fetching 1 files:   0%|          | 0/1 [00:00<?, ?it/s]Fetching 1 files: 100%|██████████| 1/1 [00:00<00:00, 1720.39it/s]
-An error occurred while trying to fetch sd-legacy/stable-diffusion-inpainting: sd-legacy/stable-diffusion-inpainting does not appear to have a file named diffusion_pytorch_model.safetensors.
-Defaulting to unsafe serialization. Pass `allow_pickle=False` to raise an error instead.
-An error occurred while trying to fetch sd-legacy/stable-diffusion-inpainting: sd-legacy/stable-diffusion-inpainting does not appear to have a file named diffusion_pytorch_model.safetensors.
-Defaulting to unsafe serialization. Pass `allow_pickle=False` to raise an error instead.
-Fetching 1 files:   0%|          | 0/1 [00:00<?, ?it/s]Fetching 1 files: 100%|██████████| 1/1 [00:00<00:00, 1151.33it/s]
-Traceback (most recent call last):
-  File "/home/kshaltiel/code/CSE-495-Code/prompt_experiments/metrics_scripts/calculate_metrics_plausible_placement.py", line 698, in <module>
-    full_pipeline()
-  File "/home/kshaltiel/code/CSE-495-Code/prompt_experiments/metrics_scripts/calculate_metrics_plausible_placement.py", line 571, in full_pipeline
-    metrics = process_image_pair(orig_crop, gen_crop, category_name, mask_crop if segmented else orig_crop)
-  File "/home/kshaltiel/code/CSE-495-Code/prompt_experiments/metrics_scripts/calculate_metrics_plausible_placement.py", line 488, in process_image_pair
-    metrics["lare"] = calculate_lare(gen_img)
-  File "/home/kshaltiel/miniconda3/envs/inpaint_env_py39/lib/python3.9/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
-    return func(*args, **kwargs)
-  File "/home/kshaltiel/code/CSE-495-Code/prompt_experiments/metrics_scripts/calculate_metrics_plausible_placement.py", line 319, in calculate_lare
-    noise_pred = sd_unet(noisy_latent, timesteps, encoder_hidden_states).sample
-  File "/home/kshaltiel/miniconda3/envs/inpaint_env_py39/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
-    return self._call_impl(*args, **kwargs)
-  File "/home/kshaltiel/miniconda3/envs/inpaint_env_py39/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
-    return forward_call(*args, **kwargs)
-  File "/home/kshaltiel/miniconda3/envs/inpaint_env_py39/lib/python3.9/site-packages/diffusers/models/unets/unet_2d_condition.py", line 1168, in forward
-    sample = self.conv_in(sample)
-  File "/home/kshaltiel/miniconda3/envs/inpaint_env_py39/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
-    return self._call_impl(*args, **kwargs)
-  File "/home/kshaltiel/miniconda3/envs/inpaint_env_py39/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
-    return forward_call(*args, **kwargs)
-  File "/home/kshaltiel/miniconda3/envs/inpaint_env_py39/lib/python3.9/site-packages/torch/nn/modules/conv.py", line 554, in forward
-    return self._conv_forward(input, self.weight, self.bias)
-  File "/home/kshaltiel/miniconda3/envs/inpaint_env_py39/lib/python3.9/site-packages/torch/nn/modules/conv.py", line 549, in _conv_forward
-    return F.conv2d(
-RuntimeError: Given groups=1, weight of size [320, 9, 3, 3], expected input[1, 4, 64, 64] to have 9 channels, but got 4 channels instead
