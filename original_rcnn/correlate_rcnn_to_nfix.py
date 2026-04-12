@@ -16,6 +16,11 @@ rcnn_detections_path = Path("/home/kshaltiel/code/CSE-495-Code/rcnn_target_bbox_
 output_dir = Path("/home/kshaltiel/code/CSE-495-Code/rcnn_nfix_correlations")
 output_dir.mkdir(exist_ok=True)
 
+def point_in_bbox(x, y, bbox):
+    """Check if point (x, y) is inside bbox [x, y, width, height]."""
+    x0, y0, w, h = bbox
+    return x0 <= x <= x0 + w and y0 <= y <= y0 + h
+
 # Load fixations and compute average nfix per image
 print("Loading fixation data...")
 with open(fixations_path) as f:
@@ -38,85 +43,99 @@ for trial in fixations:
     if len(bbox) != 4 or len(X) == 0:
         continue
     
-    x0, y0, w, h = bbox
+    # Find first fixation on target
     first_target_idx = None
     for i in range(len(X)):
-        if x0 <= X[i] <= x0 + w and y0 <= Y[i] <= y0 + h:
+        if point_in_bbox(X[i], Y[i], bbox):
             first_target_idx = i
             break
     
-    if first_target_idx is not None:
-        nfix_val = first_target_idx + 1
-        if key not in nfix_by_image:
-            nfix_by_image[key] = []
-        nfix_by_image[key].append(nfix_val)
+    if first_target_idx is None:
+        continue
+    
+    nfix_val = first_target_idx + 1
+    if key not in nfix_by_image:
+        nfix_by_image[key] = []
+    nfix_by_image[key].append(nfix_val)
+
+def load_rcnn_scores():
+    """Load RCNN detection scores from JSON file."""
+    print("Loading RCNN detections...")
+    with open(rcnn_detections_path) as f:
+        rcnn_data = json.load(f)
+
+    rcnn_scores = {}
+    for entry_key, data in rcnn_data.items():
+        # entry_key is in format "imagename.jpg_category"
+        parts = entry_key.rsplit('_', 1)
+        if len(parts) != 2:
+            continue
+        
+        img_name = parts[0]
+        category = parts[1]
+        
+        # Verify this matches the task field in data
+        if data.get('task') != category:
+            continue
+        
+        key = (img_name, category)
+        
+        # Use the target category score (not max of all detected objects)
+        target_score = data['detections'].get('target_category_score', 0.0)
+        rcnn_scores[key] = float(target_score)
+    
+    return rcnn_scores
+
+
+def match_rcnn_and_nfix(rcnn_scores, nfix_by_image):
+    """Match RCNN scores with nfix values."""
+    matched_pairs = defaultdict(lambda: {'scores': [], 'nfix': []})
+    
+    for key, rcnn_score in rcnn_scores.items():
+        if key in nfix_by_image:
+            img_name, category = key
+            # Average nfix per image
+            avg_nfix_val = np.mean(nfix_by_image[key])
+            matched_pairs[category]['scores'].append(rcnn_score)
+            matched_pairs[category]['nfix'].append(avg_nfix_val)
+    
+    return matched_pairs
+
+
+def compute_rcnn_correlations(matched_pairs):
+    """Compute Pearson correlations per category."""
+    results = {}
+    for category in sorted(matched_pairs.keys()):
+        data = matched_pairs[category]
+        if len(data['scores']) > 2:
+            r, p = pearsonr(data['scores'], data['nfix'])
+            results[category] = {
+                'r': float(r),
+                'p': float(p),
+                'n_samples': len(data['scores']),
+                'mean_nfix': float(np.mean(data['nfix'])),
+                'mean_score': float(np.mean(data['scores']))
+            }
+            print(f"  {category:20} r={r:6.3f} p={p:.4f} n={len(data['scores'])}")
+        else:
+            print(f"  {category:20} SKIPPED (n={len(data['scores'])})")
+    
+    return results
+
 
 # Average nfix per image
 avg_nfix = {k: np.mean(v) for k, v in nfix_by_image.items()}
 print(f"Computed avg nfix for {len(avg_nfix)} image-category pairs")
 
-# Load RCNN detections
-print("Loading RCNN detections...")
-with open(rcnn_detections_path) as f:
-    rcnn_data = json.load(f)
-
-# Extract scores per image - ONLY for correct category matches
-rcnn_scores = {}
-for entry_key, data in rcnn_data.items():
-    # entey_key is in format "imagename.jpg_category"
-    # Split from the right to get category
-    parts = entry_key.rsplit('_', 1)
-    if len(parts) != 2:
-        continue
-    
-    img_name = parts[0]  # e.g., "000000478726.jpg"
-    category = parts[1]  # e.g., "bottle"
-    
-    # Verify this matches the task field in data
-    if data.get('task') != category:
-        print(f"Warning: key mismatch for {entry_key}")
-    
-    key = (img_name, category)
-    
-    # Get scores from detections
-    scores = data['detections']['scores']
-    
-    # Use the max score available (treating all detected objects equally)
-    if scores and len(scores) > 0:
-        rcnn_scores[key] = max(scores)
-    else:
-        # If no detections, assign 0
-        rcnn_scores[key] = 0.0
-
+# Load RCNN scores
+rcnn_scores = load_rcnn_scores()
 print(f"Loaded RCNN scores for {len(rcnn_scores)} images")
 print(f"Images with detections: {sum(1 for v in rcnn_scores.values() if v > 0)}")
 
 # Match and compute correlations per category
 print("Computing correlations per category...")
-correlations = {}
-category_data = defaultdict(lambda: {'scores': [], 'nfix': []})
-
-for key, rcnn_score in rcnn_scores.items():
-    if key in avg_nfix:
-        img_name, category = key
-        category_data[category]['scores'].append(rcnn_score)
-        category_data[category]['nfix'].append(avg_nfix[key])
-
-# Calculate Pearson correlation per category
-results = {}
-for category, data in sorted(category_data.items()):
-    if len(data['scores']) > 2:
-        r, p = pearsonr(data['scores'], data['nfix'])
-        results[category] = {
-            'r': float(r),
-            'p': float(p),
-            'n_samples': len(data['scores']),
-            'mean_nfix': float(np.mean(data['nfix'])),
-            'mean_score': float(np.mean(data['scores']))
-        }
-        print(f"  {category:20} r={r:6.3f} p={p:.4f} n={len(data['scores'])}")
-    else:
-        print(f"  {category:20} SKIPPED (n={len(data['scores'])})")
+matched_pairs = match_rcnn_and_nfix(rcnn_scores, nfix_by_image)
+results = compute_rcnn_correlations(matched_pairs)
 
 # Save correlations to JSON
 output_json = output_dir / "rcnn_nfix_correlations.json"
@@ -153,10 +172,10 @@ print("Creating overall scatter plot...")
 all_scores = []
 all_nfix = []
 
-for key, rcnn_score in rcnn_scores.items():
-    if key in avg_nfix:
-        all_scores.append(rcnn_score)
-        all_nfix.append(avg_nfix[key])
+for category in matched_pairs.keys():
+    data = matched_pairs[category]
+    all_scores.extend(data['scores'])
+    all_nfix.extend(data['nfix'])
 
 
 
