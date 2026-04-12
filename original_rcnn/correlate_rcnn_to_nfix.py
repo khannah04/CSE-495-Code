@@ -12,10 +12,9 @@ from scipy.stats import pearsonr
 
 # Paths
 fixations_path = Path("/home/kshaltiel/code/CSE-495-Code/coco_search18_fixations_TP_train_split1.json")
-rcnn_detections_path = Path("/home/kshaltiel/code/CSE-495-Code/rcnn_target_bbox_detections.json")
+rcnn_detections_path = Path("/home/kshaltiel/code/CSE-495-Code/rcnn code/rcnn_target_bbox_detections.json")
 output_dir = Path("/home/kshaltiel/code/CSE-495-Code/rcnn_nfix_correlations")
 output_dir.mkdir(exist_ok=True)
-
 def point_in_bbox(x, y, bbox):
     """Check if point (x, y) is inside bbox [x, y, width, height]."""
     x0, y0, w, h = bbox
@@ -26,6 +25,9 @@ print("Loading fixation data...")
 with open(fixations_path) as f:
     fixations = json.load(f)
 
+# Track which image-category pairs are present/correct for filtering RCNN scores
+valid_keys = set()
+
 nfix_by_image = {}
 for trial in fixations:
     img_name = Path(trial['name']).stem + '.jpg'
@@ -34,6 +36,9 @@ for trial in fixations:
     
     if trial.get('condition') != 'present' or trial.get('correct') != 1:
         continue
+    
+    # Mark as valid for RCNN filtering
+    valid_keys.add(key)
     
     # Find first fixation on target
     bbox = trial.get('bbox', [])
@@ -58,8 +63,8 @@ for trial in fixations:
         nfix_by_image[key] = []
     nfix_by_image[key].append(nfix_val)
 
-def load_rcnn_scores():
-    """Load RCNN detection scores from JSON file."""
+def load_rcnn_scores(valid_keys):
+    """Load RCNN detection scores from JSON file, filtered to valid present/correct trials."""
     print("Loading RCNN detections...")
     with open(rcnn_detections_path) as f:
         rcnn_data = json.load(f)
@@ -74,14 +79,27 @@ def load_rcnn_scores():
         img_name = parts[0]
         category = parts[1]
         
-        # Verify this matches the task field in data
-        if data.get('task') != category:
+        # Normalize and verify category matches task (case-insensitive)
+        task_in_data = data.get('task', '').lower().strip()
+        category_normalized = category.lower().strip()
+        
+        # Only validate if both are present and non-empty
+        if task_in_data and category_normalized != task_in_data:
             continue
         
         key = (img_name, category)
         
-        # Use the target category score (not max of all detected objects)
-        target_score = data['detections'].get('target_category_score', 0.0)
+        # Only include RCNN scores for valid present/correct trials
+        if key not in valid_keys:
+            continue
+        
+        # Safely extract target category score from nested dict
+        detections = data.get('detections', {})
+        if isinstance(detections, dict):
+            target_score = detections.get('target_category_score', 0.0)
+        else:
+            target_score = 0.0
+        
         rcnn_scores[key] = float(target_score)
     
     return rcnn_scores
@@ -127,8 +145,8 @@ def compute_rcnn_correlations(matched_pairs):
 avg_nfix = {k: np.mean(v) for k, v in nfix_by_image.items()}
 print(f"Computed avg nfix for {len(avg_nfix)} image-category pairs")
 
-# Load RCNN scores
-rcnn_scores = load_rcnn_scores()
+# Load RCNN scores (filtered to valid present/correct trials)
+rcnn_scores = load_rcnn_scores(valid_keys)
 print(f"Loaded RCNN scores for {len(rcnn_scores)} images")
 print(f"Images with detections: {sum(1 for v in rcnn_scores.values() if v > 0)}")
 
