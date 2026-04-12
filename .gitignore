@@ -25,38 +25,20 @@ build/
 
 # Output and visualization directories
 output/
-# visualizations/
+visualizations/
 visualizations_yes_only/
-debugging scripts/bbox_visualizations
-debugging scripts/histograms
-debugging scripts/l2_pdfs
-prompt_experiments/
+bbox_visualizations/
+l2_pdfs/
 rcnn_mask_samples/
 rcnn_nfix_correlations/
 rcnn_debug/
 per_image_metrics/
 per_image_metrics_NORMALIZED/
+metrics_calculations/
 responder_analysis/
-scatterplots/
 scatterplots and top2575 CODE/
 slurm jobs/
 logs/
-histograms/
-prompt_experiments/logs
-prompt_experiments/per_image_metrics
-prompt_experiments/per_image_metrics_NORMALIZED
-prompt_experiments/metrics_scripts/logs
-prompt_experiments/metrics_scripts/slurm jobs
-prompt_experiments/legacy_scripts
-prompt_experiments/per_image_metrics
-prompt_experiments/README.md
-
-visualizations/combined_eye_metrics
-visualizations/first_saccade_initiation
-visualizations/nfix_to_target
-visualizations/second_fix_to_target_landing
-visualizations/target_verification_time
-visualizations/total_search_time
 
 # Generated files
 *.csv
