@@ -32,6 +32,7 @@ l2_pdfs/
 rcnn_mask_samples/
 rcnn_nfix_correlations/
 rcnn_debug/
+original_rcnn/
 per_image_metrics/
 per_image_metrics_NORMALIZED/
 metrics_calculations/
